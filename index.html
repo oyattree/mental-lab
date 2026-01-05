@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mental lab</title>
+  <title>Mental Lab v1.1</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #161b22; color: #e5e7eb; display: flex; flex-direction: column; height: 100vh; font-size: 1.2rem; overflow: hidden; }
@@ -21,7 +21,7 @@
     @media (max-width: 768px) { .formula-sidebar { position: absolute; top: 0; left: 0; height: 100%; transform: translateX(-100%); } .formula-sidebar.open { transform: translateX(0); } }
     .formula-item { background: #161b22; padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; font-family: monospace; color: #58a6ff; border: 1px solid #30363d; font-size: 1.1rem; line-height: 1.4; }
 
-    /* 메인 콘텐츠 영역 - 중앙 정렬 핵심 */
+    /* 메인 콘텐츠 */
     .content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; }
 
     /* 카드 디자인 */
@@ -35,7 +35,6 @@
     .problem { font-size: 3.5rem; font-weight: 800; text-align: center; margin: 30px 0 15px; min-height: 1.2em; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
     .timer { font-size: 1.2rem; text-align: center; color: #6b7280; margin-bottom: 20px; font-family: monospace; }
     
-    /* 입력창 중앙 정렬 */
     .answer-row { display: flex; justify-content: center; width: 100%; margin-bottom: 15px; }
     .answer-row input { width: 100%; max-width: 300px; padding: 15px; border-radius: 12px; border: 2px solid #30363d; background: #0d1117; color: #e5e7eb; font-size: 2.2rem; text-align: center; outline: none; transition: border-color 0.2s; }
     .answer-row input:focus { border-color: #58a6ff; }
@@ -44,7 +43,7 @@
     .result.correct { color: #10b981; }
     .result.wrong { color: #ef4444; }
 
-    /* 히스토리 & 그래프 중앙 정렬 */
+    /* 히스토리 & 그래프 */
     .history { width: 100%; max-width: 500px; background: #1f252f; border-radius: 15px 15px 0 0; padding: 20px; border-top: 1px solid #2f3540; height: 200px; overflow-y: auto; font-size: 1.1rem; }
     .graph { width: 100%; max-width: 500px; padding: 15px; background: #1f252f; border-radius: 0 0 15px 15px; border-top: 1px solid #2f3540; margin-bottom: 40px; }
     .graph-bars { display: flex; gap: 5px; align-items: flex-end; min-height: 35px; justify-content: center; }
@@ -93,7 +92,10 @@
       <div id="expCard" class="card" style="display:none;">
         <h2>Exponential</h2>
         <div class="row">
-          <select id="expBase" style="padding:10px; border-radius:8px; background:#161b22; color:white; border:1px solid #2f3540;"><option value="2">2ⁿ</option><option value="3">3ⁿ</option></select>
+          <select id="expBase" style="padding:10px; border-radius:8px; background:#161b22; color:white; border:1px solid #2f3540;">
+            <option value="2">2ⁿ</option>
+            <option value="3">3ⁿ</option>
+          </select>
           <label>min <input type="number" id="expNMin" value="1" /></label>
           <label>max <input type="number" id="expNMax" value="10" /></label>
           <button id="expNew" style="padding:10px 20px; border-radius:8px; cursor:pointer; background:#238636; color:white; border:none; font-weight:bold;">New</button>
@@ -112,14 +114,32 @@
   </div>
 
   <script>
+    // --- Elements ---
     const sidebar = document.getElementById("sidebar");
     const toggleBtn = document.getElementById("toggleSidebar");
     const historyBox = document.getElementById("history");
     const graphBars = document.getElementById("graphBars");
+    
+    const mulNew = document.getElementById("mulNew"), 
+          mulProblem = document.getElementById("mulProblem"), 
+          mulAns = document.getElementById("mulAns"), 
+          mulResult = document.getElementById("mulResult"), 
+          mulTimer = document.getElementById("mulTimer");
 
-    let mode = "mul", timer = null, start = 0, current = null, recent = [];
+    const expNew = document.getElementById("expNew"), 
+          expProblem = document.getElementById("expProblem"), 
+          expAns = document.getElementById("expAns"), 
+          expResult = document.getElementById("expResult"), 
+          expTimer = document.getElementById("expTimer");
 
-    // 로컬 저장소 로드
+    // --- State ---
+    let mode = "mul";
+    let timer = null;
+    let start = 0;
+    let current = null; // 현재 문제 데이터
+    let recent = [];    // 히스토리
+
+    // --- Initialization ---
     window.onload = () => {
       const saved = localStorage.getItem('mentalLabHistory');
       if (saved) {
@@ -129,6 +149,7 @@
       }
     };
 
+    // --- UI Logic ---
     function renderHistoryUI(text, ok) {
       const div = document.createElement("div");
       div.style.color = ok ? "#10b981" : "#ef4444";
@@ -146,49 +167,156 @@
       updateGraph();
     }
 
+    function updateGraph() {
+      graphBars.innerHTML = "";
+      recent.forEach(item => {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.background = item.ok ? "#10b981" : "#ef4444";
+        graphBars.appendChild(bar);
+      });
+    }
+
     toggleBtn.onclick = (e) => { e.stopPropagation(); sidebar.classList.toggle("open"); };
     document.onclick = (e) => { if (!sidebar.contains(e.target)) sidebar.classList.remove("open"); };
 
-    function startTimer(el) { start = performance.now(); if (timer) clearInterval(timer); timer = setInterval(() => { el.textContent = ((performance.now() - start) / 1000).toFixed(2) + "s"; }, 60); }
-    function stopTimer() { if (timer) clearInterval(timer); timer = null; }
-    function randNDigits(d) { d = Math.max(1, d); const min = Math.pow(10, d - 1), max = Math.pow(10, d) - 1; return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function updateGraph() { graphBars.innerHTML = ""; recent.forEach(item => { const bar = document.createElement("div"); bar.className = "bar"; bar.style.background = item.ok ? "#10b981" : "#ef4444"; graphBars.appendChild(bar); }); }
-    function triggerNewProblem() { if (mode === "mul") mulNew.click(); else expNew.click(); }
+    // --- Timer Logic ---
+    function startTimer(el) {
+      start = performance.now();
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        el.textContent = ((performance.now() - start) / 1000).toFixed(2) + "s";
+      }, 60);
+    }
 
-    navMul.onclick = () => { mode = "mul"; navMul.classList.add("active"); navExp.classList.remove("active"); document.getElementById("mulCard").style.display = ""; document.getElementById("expCard").style.display = "none"; };
-    navExp.onclick = () => { mode = "exp"; navExp.classList.add("active"); navMul.classList.remove("active"); document.getElementById("mulCard").style.display = "none"; document.getElementById("expCard").style.display = ""; };
+    function stopTimer() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
 
-    const mulNew = document.getElementById("mulNew"), mulProblem = document.getElementById("mulProblem"), mulAns = document.getElementById("mulAns"), mulResult = document.getElementById("mulResult"), mulTimer = document.getElementById("mulTimer");
-    mulNew.onclick = () => { current = { type: "mul", a: randNDigits(parseInt(document.getElementById("digitsA").value)), b: randNDigits(parseInt(document.getElementById("digitsB").value)) }; mulProblem.textContent = `${current.a} × ${current.b}`; mulResult.textContent = ""; mulAns.value = ""; stopTimer(); startTimer(mulTimer); mulAns.focus(); };
+    // --- Game Logic ---
+    function randNDigits(d) {
+      d = Math.max(1, d);
+      const min = Math.pow(10, d - 1);
+      const max = Math.pow(10, d) - 1;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-    const expNew = document.getElementById("expNew"), expProblem = document.getElementById("expProblem"), expAns = document.getElementById("expAns"), expResult = document.getElementById("expResult"), expTimer = document.getElementById("expTimer");
-    expNew.onclick = () => { const n = Math.floor(Math.random() * (parseInt(document.getElementById("expNMax").value) - parseInt(document.getElementById("expNMin").value) + 1)) + parseInt(document.getElementById("expNMin").value); current = { type: "exp", base: parseInt(document.getElementById("expBase").value), n }; expProblem.textContent = `${current.base}^${n}`; expResult.textContent = ""; expAns.value = ""; stopTimer(); startTimer(expTimer); expAns.focus(); };
+    function triggerNewProblem() {
+      if (mode === "mul") mulNew.click();
+      else expNew.click();
+    }
 
+    // 네비게이션
+    navMul.onclick = () => {
+      mode = "mul";
+      navMul.classList.add("active");
+      navExp.classList.remove("active");
+      document.getElementById("mulCard").style.display = "";
+      document.getElementById("expCard").style.display = "none";
+      mulAns.focus();
+    };
+
+    navExp.onclick = () => {
+      mode = "exp";
+      navExp.classList.add("active");
+      navMul.classList.remove("active");
+      document.getElementById("mulCard").style.display = "none";
+      document.getElementById("expCard").style.display = "";
+      expAns.focus();
+    };
+
+    // 곱셈 문제 생성
+    mulNew.onclick = () => {
+      const da = parseInt(document.getElementById("digitsA").value) || 2;
+      const db = parseInt(document.getElementById("digitsB").value) || 2;
+      
+      current = {
+        type: "mul",
+        a: randNDigits(da),
+        b: randNDigits(db)
+      };
+      
+      mulProblem.textContent = `${current.a} × ${current.b}`;
+      mulResult.textContent = "";
+      mulAns.value = "";
+      stopTimer();
+      startTimer(mulTimer);
+      mulAns.focus();
+    };
+
+    // 지수 문제 생성
+    expNew.onclick = () => {
+      const min = parseInt(document.getElementById("expNMin").value) || 1;
+      const max = parseInt(document.getElementById("expNMax").value) || 10;
+      const n = Math.floor(Math.random() * (max - min + 1)) + min;
+      const base = parseInt(document.getElementById("expBase").value);
+
+      current = {
+        type: "exp",
+        base: base,
+        n: n
+      };
+
+      expProblem.textContent = `${current.base}^${current.n}`;
+      expResult.textContent = "";
+      expAns.value = "";
+      stopTimer();
+      startTimer(expTimer);
+      expAns.focus();
+    };
+
+    // 정답 확인 (핵심 로직 Fix)
     function checkAnswer() {
       if (!current) return;
       stopTimer();
+      
       let ans, correct, text;
       const input = current.type === "mul" ? mulAns : expAns;
+      
+      // 쉼표 제거 후 숫자 변환
       ans = Number(input.value.replace(/,/g, ""));
+      
       if (current.type === "mul") {
         correct = current.a * current.b;
         text = `[Mul] ${current.a}×${current.b}=${ans}`;
       } else {
+        // [FIX] n -> current.n 으로 수정
         correct = Math.pow(current.base, current.n);
-        text = `[Exp] ${current.base}^${n}=${ans}`;
+        text = `[Exp] ${current.base}^${current.n}=${ans}`;
       }
-      const ok = ans === correct;
+
+      const ok = (ans === correct);
       const resEl = current.type === "mul" ? mulResult : expResult;
+      
       resEl.textContent = `정답: ${correct.toLocaleString()} ${ok ? '· OK' : '· WRONG'}`;
       resEl.className = "result " + (ok ? "correct" : "wrong");
+      
       saveAndRender(text, ok);
     }
 
+    // 이벤트 리스너
     mulAns.onkeydown = (e) => { if (e.key === "Enter") checkAnswer(); };
     expAns.onkeydown = (e) => { if (e.key === "Enter") checkAnswer(); };
-    mulAns.oninput = () => { if (mulAns.value.endsWith(" ")) { mulAns.value = mulAns.value.trim(); triggerNewProblem(); } };
-    expAns.oninput = () => { if (expAns.value.endsWith(" ")) { expAns.value = expAns.value.trim(); triggerNewProblem(); } };
-    document.onkeydown = (e) => { if ((e.code === "Space" || e.key === " ") && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); triggerNewProblem(); } };
+
+    // 스페이스바 입력 시 새 문제 (Input 포커스 아닐 때만)
+    document.onkeydown = (e) => {
+      if ((e.code === "Space" || e.key === " ") && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        triggerNewProblem();
+      }
+    };
+    
+    // 입력창 끝에 스페이스 입력 시 새 문제 트리거 (모바일 대응)
+    const handleInputSpace = (input) => {
+      if (input.value.endsWith(" ")) {
+        input.value = input.value.trim();
+        triggerNewProblem();
+      }
+    };
+    mulAns.oninput = () => handleInputSpace(mulAns);
+    expAns.oninput = () => handleInputSpace(expAns);
+
   </script>
 </body>
 </html>
