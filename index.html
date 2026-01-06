@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mental Lab v1.8.6 - Pro Logic Edition</title>
+  <title>Mental Lab v1.8.7 - Logic First</title>
   <style>
     :root { 
       --bg: #0d1117; --card: #161b22; --border: #30363d; 
@@ -18,7 +18,7 @@
     .slogan-header h1 { font-size: 1.1rem; font-weight: 700; margin: 0; color: #8b949e; letter-spacing: 0.5px; }
     .slogan-header span { color: var(--primary); }
 
-    /* Navigation - 모든 버튼 중앙 정렬 */
+    /* Navigation */
     .nav { display: flex; gap: 8px; padding: 12px; background: #161b22; border-bottom: 1px solid #30363d; flex: 0 0 auto; justify-content: center; align-items: center; }
     .nav button { padding: 6px 12px; border-radius: 6px; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; cursor: pointer; font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: 0.2s; }
     .nav button.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
@@ -26,28 +26,26 @@
 
     .main-container { display: flex; flex: 1; position: relative; overflow: hidden; width: 100%; justify-content: center; }
 
-    /* 사이드바 오버레이 */
+    /* 사이드바 오버레이 (초기 open 상태 고려) */
     .formula-sidebar { position: absolute; left: 0; top: 0; width: 280px; height: 100%; background: #0d1117; border-right: 1px solid #30363d; padding: 15px; overflow-y: auto; transition: transform 0.3s ease; z-index: 2000; transform: translateX(-100%); box-shadow: 10px 0 20px rgba(0,0,0,0.5); }
     .formula-sidebar.open { transform: translateX(0); }
     .formula-group h3 { color: #8b949e; border-bottom: 1px solid #30363d; padding-bottom: 5px; margin-top: 15px; font-size: 0.9rem; text-transform: uppercase; }
     .formula-item { background: #161b22; padding: 8px; border-radius: 6px; margin-bottom: 6px; font-family: monospace; color: #58a6ff; border: 1px solid #30363d; font-size: 0.85rem; line-height: 1.4; }
 
-    /* 연습 공간 중앙 집중 */
+    /* 연습 공간 중앙 정렬 */
     .content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; }
     .card { width: 100%; max-width: 500px; background: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; position: relative; }
     .card h2 { margin: 0 0 12px; font-size: 1.2rem; text-align: center; color: #8b949e; letter-spacing: 1.5px; }
     
     .row { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; justify-content: center; }
     .row label { font-size: 0.75rem; display: flex; flex-direction: column; gap: 4px; color: #8b949e; }
-    
     .row input, .row select { padding: 8px; border-radius: 6px; border: 1px solid #30363d; background: #0d1117; color: #c9d1d9; font-size: 0.85rem; text-align: center; }
-    
-    /* 입력창 너비 고정 (깨짐 방지) */
+
     #digitsA, #digitsB { width: 130px; }
-    #expNMin, #expNMax { width: 75px; } /* 지수 입력창 크기 최적화 */
+    #expNMin, #expNMax { width: 80px; }
     #geoMax { width: 100px; }
 
-    /* 버튼 사이즈 동일화 및 수직 배치 */
+    /* 버튼 그룹 */
     .btn-group { display: flex; flex-direction: column; gap: 4px; }
     .btn-action { min-width: 90px; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; color: white; text-align: center; }
     .btn-new { background: var(--success); font-size: 0.9rem; }
@@ -59,9 +57,8 @@
     .problem { font-size: 3.2rem; font-weight: 800; text-align: center; margin: 15px 0 5px; color: #f0f6fc; min-height: 1.2em; }
     .timer { font-size: 1rem; text-align: center; color: #484f58; margin-bottom: 15px; font-family: monospace; }
     
-    /* 정답 입력칸 중앙 정렬 */
     .answer-row { width: 100%; display: flex; justify-content: center; }
-    .answer-row input { width: 100%; max-width: 320px; padding: 12px; border-radius: 10px; border: 2px solid #30363d; background: #0d1117; color: #ffffff; font-size: 2.2rem; text-align: center; outline: none; }
+    .answer-row input { width: 100%; max-width: 320px; padding: 12px; border-radius: 10px; border: 2px solid #30363d; background: #0d1117; color: #ffffff; font-size: 2.2rem; text-align: center; outline: none; transition: 0.2s; }
     .answer-row input:focus { border-color: #58a6ff; }
     .answer-row input:disabled { opacity: 0.5; }
 
@@ -89,7 +86,7 @@
   </div>
 
   <div class="main-container">
-    <div class="formula-sidebar" id="sidebar">
+    <div class="formula-sidebar open" id="sidebar">
       <div class="formula-group">
         <h3>Algebraic</h3>
         <div class="formula-item">a(b±1) = ab ± a</div>
@@ -99,6 +96,11 @@
         <h3>Pythagorean</h3>
         <div class="formula-item"><b>Odd a:</b><br>b = (a²-1)/2, c = b+1</div>
         <div class="formula-item"><b>Even a:</b><br>b = (a/2)²-1, c = b+2</div>
+      </div>
+      <div class="formula-group">
+        <h3>Scales</h3>
+        <div class="formula-item">log₂2 ≈ 0.3, log₂3 ≈ 0.48</div>
+        <div class="formula-item">2¹⁰ = 1024</div>
       </div>
       <button onclick="toggleSidebar()" style="width:100%; margin-top:20px; background:#30363d; color:#fff; border:none; padding:8px; border-radius:4px; cursor:pointer;">Close</button>
     </div>
@@ -123,11 +125,7 @@
       <div id="expCard" class="card" style="display:none;">
         <h2>Exponential</h2>
         <div class="row">
-          <select id="expBase">
-            <option value="2">2ⁿ</option>
-            <option value="3">3ⁿ</option>
-            <option value="5">5ⁿ</option>
-          </select>
+          <select id="expBase"><option value="2">2ⁿ</option><option value="3">3ⁿ</option><option value="5">5ⁿ</option></select>
           <label>min <input type="number" id="expNMin" value="1" /></label>
           <label>max <input type="number" id="expNMax" value="10" /></label>
           <div class="btn-group">
@@ -196,7 +194,6 @@
         const a = randND(da); const b = randND(db);
         state.current = { q: `${a} × ${b}`, a: (a * b).toString() };
       } else if (state.mode === 'exp') {
-        // value에서 숫자만 추출 (2ⁿ -> 2)
         const b = parseInt(document.getElementById("expBase").value); 
         const min = parseInt(document.getElementById("expNMin").value);
         const max = parseInt(document.getElementById("expNMax").value);
@@ -220,7 +217,6 @@
       state.active = false;
       const u = getUI(state.mode);
       const val = u.ans.value.trim().replace(/ /g, "");
-      // 콤마 제거 후 정답 비교
       const ok = (val.replace(/,/g, "") === state.current.a.replace(/,/g, ""));
       u.res.textContent = ok ? "✓ Correct" : `✗ Answer: ${state.current.a}`;
       u.res.className = "result " + (ok ? "correct" : "wrong");
@@ -239,7 +235,9 @@
     function runTimer(el) {
       state.start = performance.now();
       if(state.timer) clearInterval(state.timer);
-      state.timer = setInterval(() => { el.textContent = ((performance.now() - state.start)/1000).toFixed(2) + "s"; }, 60);
+      state.timer = setInterval(() => {
+        el.textContent = ((performance.now() - state.start)/1000).toFixed(2) + "s";
+      }, 60);
     }
 
     function randND(d) { return Math.floor(Math.random() * (Math.pow(10, d) - Math.pow(10, d-1))) + Math.pow(10, d-1); }
