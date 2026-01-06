@@ -3,51 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mental Lab v1.5 - Pro Edition</title>
+  <title>Mental Lab v1.8.4 - Pro Edition</title>
   <style>
+    :root { 
+      --bg: #0d1117; --card: #161b22; --border: #30363d; 
+      --primary: #58a6ff; --success: #238636; --danger: #da3633;
+      --text: #e5e7eb; --muted: #8b949e;
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0d1117; color: #e5e7eb; display: flex; flex-direction: column; height: 100vh; font-size: 1rem; overflow: hidden; }
+    body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; font-size: 1rem; overflow: hidden; }
     
-    /* Navigation */
-    .nav { display: flex; gap: 8px; padding: 12px; background: #161b22; border-bottom: 1px solid #30363d; flex: 0 0 auto; align-items: center; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .nav::-webkit-scrollbar { display: none; }
+    /* 1. 슬로건 헤더 (최상단 중앙 & 하이라이트) */
+    .slogan-header { text-align: center; padding: 15px 10px 5px; background: #161b22; border-bottom: 1px solid #30363d; flex: 0 0 auto; }
+    .slogan-header h1 { font-size: 1.1rem; font-weight: 700; margin: 0; color: #8b949e; letter-spacing: 0.5px; }
+    .slogan-header span { color: var(--primary); }
+
+    /* 2. 네비게이션 (모든 버튼 중앙 정렬) */
+    .nav { display: flex; gap: 8px; padding: 12px; background: #161b22; border-bottom: 1px solid #30363d; flex: 0 0 auto; justify-content: center; align-items: center; }
     .nav button { padding: 6px 12px; border-radius: 6px; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; cursor: pointer; font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: 0.2s; }
-    .nav button.active { background: #58a6ff; color: #ffffff; border-color: #58a6ff; }
-    #toggleSidebar { background: #238636; border: none; color: white; margin-left: auto; }
+    .nav button.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+    #toggleSidebar { background: var(--success); color: white; border-color: var(--success); }
 
-    .main-container { display: flex; flex: 1; position: relative; overflow: hidden; width: 100%; }
+    /* 3. 메인 컨테이너 (정중앙 정렬) */
+    .main-container { display: flex; flex: 1; position: relative; overflow: hidden; width: 100%; justify-content: center; }
 
-    /* Sidebar */
-    .formula-sidebar { width: 280px; background: #0d1117; border-right: 1px solid #30363d; padding: 15px; overflow-y: auto; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; flex-shrink: 0; }
-    @media (max-width: 768px) { .formula-sidebar { position: absolute; top: 0; left: 0; height: 100%; transform: translateX(-100%); width: 85%; max-width: 320px; box-shadow: 10px 0 20px rgba(0,0,0,0.5); } .formula-sidebar.open { transform: translateX(0); } }
+    /* 사이드바 (오버레이 방식 - 중앙 레이아웃 영향 없음) */
+    .formula-sidebar { position: absolute; left: 0; top: 0; width: 280px; height: 100%; background: #0d1117; border-right: 1px solid #30363d; padding: 15px; overflow-y: auto; transition: transform 0.3s ease; z-index: 2000; transform: translateX(-100%); box-shadow: 10px 0 20px rgba(0,0,0,0.5); }
+    .formula-sidebar.open { transform: translateX(0); }
     .formula-group h3 { color: #8b949e; border-bottom: 1px solid #30363d; padding-bottom: 5px; margin-top: 15px; font-size: 0.9rem; text-transform: uppercase; }
     .formula-item { background: #161b22; padding: 8px; border-radius: 6px; margin-bottom: 6px; font-family: monospace; color: #58a6ff; border: 1px solid #30363d; font-size: 0.85rem; line-height: 1.4; }
 
-    /* Content Area */
-    .content { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; align-items: center; width: 100%; background: #0d1117; }
-    .card { width: 100%; max-width: 500px; background: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; }
+    /* 콘텐츠 영역 */
+    .content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .card { width: 100%; max-width: 500px; background: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; position: relative; }
     .card h2 { margin: 0 0 12px; font-size: 1.2rem; text-align: center; color: #8b949e; letter-spacing: 1.5px; }
     
-    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-end; justify-content: center; }
-    .row label { font-size: 0.75rem; display: flex; flex-direction: column; gap: 3px; color: #8b949e; }
-    .row input, .row select { padding: 6px; border-radius: 6px; border: 1px solid #30363d; background: #0d1117; color: #c9d1d9; font-size: 0.85rem; text-align: center; }
-    
+    /* 입력 행 & 버튼 수직 배치 */
+    .row { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-end; justify-content: center; }
+    .row label { font-size: 0.75rem; display: flex; flex-direction: column; gap: 4px; color: #8b949e; }
+    .row input, .row select { padding: 8px; border-radius: 6px; border: 1px solid #30363d; background: #0d1117; color: #c9d1d9; font-size: 0.85rem; text-align: center; }
+
+    /* 입력창 너비 최적화 */
+    #digitsA, #digitsB { width: 130px; }
+    #expNMin, #expNMax { width: 80px; }
+    #geoMax { width: 100px; }
+
+    /* 액션 버튼 고정 (NEW 밑에 STOP) */
+    .btn-group { display: flex; flex-direction: column; gap: 4px; }
+    .btn-action { min-width: 90px; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; color: white; text-align: center; }
+    .btn-new { background: var(--success); font-size: 0.9rem; }
+    .btn-stop { background: var(--danger); font-size: 0.75rem; }
+
+    /* 삼각형 비주얼 */
     .triangle-viz { width: 100px; height: 80px; margin: 0 auto 10px; }
     .triangle-viz svg { width: 100%; height: 100%; opacity: 0.8; }
 
-    .problem { font-size: 3rem; font-weight: 800; text-align: center; margin: 10px 0 5px; color: #f0f6fc; }
-    .problem-sub { font-size: 0.85rem; color: #8b949e; text-align: center; margin-bottom: 10px; }
-    .timer { font-size: 1rem; text-align: center; color: #484f58; margin-bottom: 12px; font-family: monospace; }
+    .problem { font-size: 3.2rem; font-weight: 800; text-align: center; margin: 15px 0 5px; color: #f0f6fc; min-height: 1.2em; }
+    .timer { font-size: 1rem; text-align: center; color: #484f58; margin-bottom: 15px; font-family: monospace; }
     
-    .answer-row input { width: 100%; max-width: 300px; padding: 10px; border-radius: 10px; border: 2px solid #30363d; background: #0d1117; color: #ffffff; font-size: 2rem; text-align: center; outline: none; transition: 0.2s; }
-    .answer-row input:focus { border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88,166,255,0.1); }
+    /* 정답 입력칸 중앙 정렬 */
+    .answer-row { width: 100%; display: flex; justify-content: center; }
+    .answer-row input { width: 100%; max-width: 320px; padding: 12px; border-radius: 10px; border: 2px solid #30363d; background: #0d1117; color: #ffffff; font-size: 2.2rem; text-align: center; outline: none; }
+    .answer-row input:focus { border-color: #58a6ff; }
+    .answer-row input:disabled { opacity: 0.5; }
 
-    .result { text-align: center; min-height: 1.5em; font-size: 1.1rem; font-weight: bold; margin-top: 8px; }
+    .result { text-align: center; min-height: 1.5em; font-size: 1.1rem; font-weight: bold; margin-top: 10px; }
     .result.correct { color: #39d353; }
     .result.wrong { color: #f85149; }
-
-    .shortcuts { display: flex; justify-content: center; gap: 12px; margin-top: 15px; font-size: 0.7rem; color: #484f58; padding-top: 10px; border-top: 1px dotted #30363d; }
-    .shortcuts kbd { background: #21262d; padding: 1px 4px; border-radius: 3px; border: 1px solid #30363d; }
 
     .history { width: 100%; max-width: 500px; background: #161b22; border-radius: 12px 12px 0 0; padding: 12px; border: 1px solid #30363d; border-bottom: none; height: 120px; overflow-y: auto; font-size: 0.85rem; }
     .graph { width: 100%; max-width: 500px; padding: 10px; background: #161b22; border-radius: 0 0 12px 12px; border: 1px solid #30363d; margin-bottom: 30px; }
@@ -57,30 +79,30 @@
 </head>
 <body>
 
+  <div class="slogan-header">
+    <h1>Log out from <span>reality</span>, Log in to <span>logic</span>.</h1>
+  </div>
+
   <div class="nav">
     <button id="navMul" class="active">Multiplication</button>
     <button id="navExp">Exponential</button>
     <button id="navGeo">Geometry</button>
-    <button id="toggleSidebar">Formulas</button>
+    <button id="toggleSidebar" onclick="toggleSidebar()">Formulas</button>
   </div>
 
   <div class="main-container">
     <div class="formula-sidebar" id="sidebar">
       <div class="formula-group">
         <h3>Algebraic</h3>
-        <div class="formula-item">a(b±1) = ab ± a</div>
-        <div class="formula-item">a²-b² = (a+b)(a-b)</div>
-      </div>
-      <div class="formula-group">
-        <h3>Scales</h3>
-        <div class="formula-item">log₂2 ≈ 0.3, log₂3 ≈ 0.48</div>
-        <div class="formula-item">2¹⁰ = 1024</div>
+        <div class="formula-item">$a(b \pm 1) = ab \pm a$</div>
+        <div class="formula-item">$a^2 - b^2 = (a+b)(a-b)$</div>
       </div>
       <div class="formula-group">
         <h3>Pythagorean</h3>
-        <div class="formula-item"><b>Odd a:</b><br>b = (a²-1)/2, c = b+1</div>
-        <div class="formula-item"><b>Even a:</b><br>b = (a/2)²-1, c = b+2</div>
+        <div class="formula-item"><b>Odd a:</b><br>$b = (a^2-1)/2, c = b+1$</div>
+        <div class="formula-item"><b>Even a:</b><br>$b = (a/2)^2-1, c = b+2$</div>
       </div>
+      <button onclick="toggleSidebar()" style="width:100%; margin-top:20px; background:#30363d; color:#fff; border:none; padding:8px; border-radius:4px; cursor:pointer;">Close</button>
     </div>
 
     <div class="content">
@@ -89,36 +111,36 @@
         <div class="row">
           <label>L <input type="number" id="digitsA" value="2" /></label>
           <label>R <input type="number" id="digitsB" value="2" /></label>
-          <button id="mulNew" style="background:#238636; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold;">NEW</button>
+          <div class="btn-group">
+            <button id="mulNew" class="btn-action btn-new" onclick="startProblem()">NEW</button>
+            <button class="btn-action btn-stop" onclick="handleStop('mul')">STOP</button>
+          </div>
         </div>
         <div class="problem" id="mulProblem">READY</div>
         <div class="timer" id="mulTimer">0.00s</div>
-        <div class="answer-row"><input type="text" id="mulAns" placeholder="?" inputmode="numeric" /></div>
+        <div class="answer-row"><input type="text" id="mulAns" placeholder="?" inputmode="numeric" disabled /></div>
         <div class="result" id="mulResult"></div>
-        <div class="shortcuts">
-          <span><kbd>Enter</kbd> Check</span> <span><kbd>Space×2</kbd> Next</span>
-        </div>
       </div>
 
       <div id="expCard" class="card" style="display:none;">
         <h2>Exponential</h2>
         <div class="row">
-          <select id="expBase"><option value="2">2ⁿ</option><option value="3">3ⁿ</option></select>
+          <select id="expBase"><option value="2">$2^n$</option><option value="3">$3^n$</option></select>
           <label>min <input type="number" id="expNMin" value="1" /></label>
           <label>max <input type="number" id="expNMax" value="10" /></label>
-          <button id="expNew" style="background:#238636; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold;">NEW</button>
+          <div class="btn-group">
+            <button id="expNew" class="btn-action btn-new" onclick="startProblem()">NEW</button>
+            <button class="btn-action btn-stop" onclick="handleStop('exp')">STOP</button>
+          </div>
         </div>
         <div class="problem" id="expProblem">READY</div>
         <div class="timer" id="expTimer">0.00s</div>
-        <div class="answer-row"><input type="text" id="expAns" placeholder="?" inputmode="numeric" /></div>
+        <div class="answer-row"><input type="text" id="expAns" placeholder="?" inputmode="numeric" disabled /></div>
         <div class="result" id="expResult"></div>
-        <div class="shortcuts">
-          <span><kbd>Enter</kbd> Check</span> <span><kbd>Space×2</kbd> Next</span>
-        </div>
       </div>
 
       <div id="geoCard" class="card" style="display:none;">
-        <h2>Geometry</h2>
+        <h2>Pythagorean Triples</h2>
         <div class="triangle-viz">
           <svg viewBox="0 0 120 100">
             <path d="M 30 20 L 30 80 L 100 80 Z" fill="none" stroke="#58a6ff" stroke-width="3" />
@@ -128,200 +150,141 @@
           </svg>
         </div>
         <div class="row">
-          <select id="geoMode"><option value="odd">Odd</option><option value="even">Even</option><option value="mix">Mix</option></select>
-          <label>min <input type="number" id="geoMin" value="3" /></label>
-          <label>max <input type="number" id="geoMax" value="20" /></label>
-          <button id="geoNew" style="background:#238636; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold;">NEW</button>
+          <select id="geoMode"><option value="odd">Odd</option><option value="even">Even</option></select>
+          <label>max-a <input type="number" id="geoMax" value="20" /></label>
+          <div class="btn-group">
+            <button id="geoNew" class="btn-action btn-new" onclick="startProblem()">NEW</button>
+            <button class="btn-action btn-stop" onclick="handleStop('geo')">STOP</button>
+          </div>
         </div>
         <div class="problem" id="geoProblem">READY</div>
-        <p class="problem-sub">Find b, c (e.g. 12, 13)</p>
         <div class="timer" id="geoTimer">0.00s</div>
-        <div class="answer-row"><input type="text" id="geoAns" placeholder="b, c" inputmode="text" /></div>
+        <div class="answer-row"><input type="text" id="geoAns" placeholder="b, c" inputmode="text" disabled /></div>
         <div class="result" id="geoResult"></div>
-        <div class="shortcuts">
-          <span><kbd>Enter</kbd> Check</span> <span><kbd>Space×2</kbd> Next</span>
-        </div>
       </div>
 
-      <div class="history" id="history"></div>
+      <div class="history" id="historyBox"></div>
       <div class="graph"><div class="graph-bars" id="graphBars"></div></div>
     </div>
   </div>
 
   <script>
-    // Logic remains core but optimized for performance
-    const sidebar = document.getElementById("sidebar");
-    const toggleBtn = document.getElementById("toggleSidebar");
-    const historyBox = document.getElementById("history");
-    const graphBars = document.getElementById("graphBars");
+    let state = { mode: 'mul', active: false, timer: null, start: 0, current: null, recent: [] };
     
-    let mode = "mul";
-    let timer = null;
-    let start = 0;
-    let current = null;
-    let recent = [];
+    function getUI(p) {
+      return {
+        prob: document.getElementById(p + "Problem"),
+        timer: document.getElementById(p + "Timer"),
+        ans: document.getElementById(p + "Ans"),
+        res: document.getElementById(p + "Result")
+      };
+    }
 
-    window.onload = () => {
-      const saved = localStorage.getItem('mentalLabHistory');
-      if (saved) {
-        recent = JSON.parse(saved);
-        recent.forEach(item => renderHistoryUI(item.text, item.ok));
-        updateGraph();
+    function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+
+    function startProblem() {
+      const u = getUI(state.mode);
+      state.active = true;
+      u.ans.disabled = false;
+      u.ans.value = ""; u.res.textContent = ""; u.ans.focus();
+      
+      if (state.mode === 'mul') {
+        const da = parseInt(document.getElementById("digitsA").value) || 2;
+        const db = parseInt(document.getElementById("digitsB").value) || 2;
+        const a = randND(da); const b = randND(db);
+        state.current = { q: `${a} × ${b}`, a: (a * b).toString() };
+      } else if (state.mode === 'exp') {
+        const b = parseInt(document.getElementById("expBase").value.replace(/[^0-9]/g, ''));
+        const max = parseInt(document.getElementById("expNMax").value);
+        const n = Math.floor(Math.random() * max) + 1;
+        state.current = { q: `${b}^${n}`, a: Math.pow(b, n).toString() };
+      } else {
+        const m = document.getElementById("geoMode").value;
+        const max = parseInt(document.getElementById("geoMax").value);
+        const a = (m === 'odd') ? randOdd(3, max) : randEven(4, max);
+        const b = (a % 2 !== 0) ? (a*a - 1)/2 : Math.pow(a/2, 2) - 1;
+        const c = (a % 2 !== 0) ? b + 1 : b + 2;
+        state.current = { q: `a = ${a}`, a: `${b},${c}` };
       }
-    };
-
-    function renderHistoryUI(text, ok) {
-      const div = document.createElement("div");
-      div.style.color = ok ? "#39d353" : "#f85149";
-      div.style.borderLeft = `3px solid ${ok ? '#39d353' : '#f85149'}`;
-      div.style.paddingLeft = "5px";
-      div.style.marginBottom = "2px";
-      div.textContent = text;
-      historyBox.appendChild(div);
-      historyBox.scrollTop = historyBox.scrollHeight;
+      u.prob.textContent = state.current.q;
+      runTimer(u.timer);
     }
 
-    function saveAndRender(text, ok) {
-      renderHistoryUI(text, ok);
-      recent.push({ text, ok });
-      if (recent.length > 30) recent.shift();
-      localStorage.setItem('mentalLabHistory', JSON.stringify(recent));
-      updateGraph();
+    function checkAnswer() {
+      if (!state.active || !state.current) return;
+      clearInterval(state.timer);
+      state.active = false;
+      const u = getUI(state.mode);
+      const val = u.ans.value.trim().replace(/ /g, "");
+      const ok = (val.replace(/,/g, "") === state.current.a.replace(/,/g, ""));
+      u.res.textContent = ok ? "✓ Correct" : `✗ Answer: ${state.current.a}`;
+      u.res.className = "result " + (ok ? "correct" : "wrong");
+      logHistory(`[${state.mode.toUpperCase()}] ${state.current.q} = ${val}`, ok);
+      state.current = null;
     }
 
-    function updateGraph() {
-      graphBars.innerHTML = "";
-      recent.forEach(item => {
-        const bar = document.createElement("div");
-        bar.className = "bar";
-        bar.style.background = item.ok ? "#39d353" : "#f85149";
-        graphBars.appendChild(bar);
-      });
+    function handleStop(prefix) {
+      clearInterval(state.timer);
+      const u = getUI(prefix);
+      u.ans.disabled = true; u.ans.value = "";
+      u.prob.textContent = "STOPPED"; u.timer.textContent = "0.00s";
+      state.active = false; state.current = null;
     }
 
-    toggleBtn.onclick = (e) => { e.stopPropagation(); sidebar.classList.toggle("open"); };
-    document.onclick = (e) => { if (!sidebar.contains(e.target)) sidebar.classList.remove("open"); };
-
-    function startTimer(el) {
-      start = performance.now();
-      if (timer) clearInterval(timer);
-      timer = setInterval(() => { el.textContent = ((performance.now() - start) / 1000).toFixed(2) + "s"; }, 60);
+    function runTimer(el) {
+      state.start = performance.now();
+      if(state.timer) clearInterval(state.timer);
+      state.timer = setInterval(() => { el.textContent = ((performance.now() - state.start)/1000).toFixed(2) + "s"; }, 60);
     }
-    function stopTimer() { if (timer) clearInterval(timer); timer = null; }
+
+    function randND(d) { return Math.floor(Math.random() * (Math.pow(10, d) - Math.pow(10, d-1))) + Math.pow(10, d-1); }
+    function randOdd(min, max) { let n = Math.floor(Math.random() * (max-min+1)) + min; return n%2!==0?n:(n+1>max?n-1:n+1); }
+    function randEven(min, max) { let n = Math.floor(Math.random() * (max-min+1)) + min; return n%2===0?n:(n+1>max?n-1:n+1); }
 
     const navs = { mul: document.getElementById("navMul"), exp: document.getElementById("navExp"), geo: document.getElementById("navGeo") };
     const cards = { mul: document.getElementById("mulCard"), exp: document.getElementById("expCard"), geo: document.getElementById("geoCard") };
 
     Object.keys(navs).forEach(k => {
       navs[k].onclick = () => {
-        mode = k;
+        state.mode = k;
         Object.keys(navs).forEach(x => navs[x].classList.toggle("active", x === k));
         Object.keys(cards).forEach(x => cards[x].style.display = (x === k ? "" : "none"));
-        document.getElementById(k + "Ans").focus();
+        handleStop(k);
       };
     });
-
-    function triggerNewProblem() { document.getElementById(mode + "New").click(); }
-
-    document.getElementById("mulNew").onclick = () => {
-      const da = parseInt(document.getElementById("digitsA").value) || 2;
-      const db = parseInt(document.getElementById("digitsB").value) || 2;
-      current = { type: "mul", a: randNDigits(da), b: randNDigits(db) };
-      document.getElementById("mulProblem").textContent = `${current.a} × ${current.b}`;
-      resetProblem("mul");
-    };
-
-    document.getElementById("expNew").onclick = () => {
-      const min = parseInt(document.getElementById("expNMin").value) || 1;
-      const max = parseInt(document.getElementById("expNMax").value) || 10;
-      const n = Math.floor(Math.random() * (max - min + 1)) + min;
-      const base = parseInt(document.getElementById("expBase").value);
-      current = { type: "exp", base, n };
-      document.getElementById("expProblem").textContent = `${base}^${n}`;
-      resetProblem("exp");
-    };
-
-    document.getElementById("geoNew").onclick = () => {
-      const min = parseInt(document.getElementById("geoMin").value) || 3;
-      const max = parseInt(document.getElementById("geoMax").value) || 20;
-      const gMode = document.getElementById("geoMode").value;
-      let a;
-      if (gMode === "odd") a = randOdd(min, max);
-      else if (gMode === "even") a = randEven(min, max);
-      else a = Math.floor(Math.random() * (max - min + 1)) + min;
-      let b, c;
-      if (a % 2 !== 0) { b = (Math.pow(a, 2) - 1) / 2; c = b + 1; }
-      else { b = Math.pow(a / 2, 2) - 1; c = b + 2; }
-      current = { type: "geo", a, b, c };
-      document.getElementById("geoProblem").textContent = `a = ${a}`;
-      resetProblem("geo");
-    };
-
-    function resetProblem(prefix) {
-      document.getElementById(prefix + "Result").textContent = "";
-      document.getElementById(prefix + "Ans").value = "";
-      stopTimer();
-      startTimer(document.getElementById(prefix + "Timer"));
-      document.getElementById(prefix + "Ans").focus();
-    }
-
-    function randNDigits(d) {
-      const min = Math.pow(10, d - 1), max = Math.pow(10, d) - 1;
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-    function randOdd(min, max) {
-      let n = Math.floor(Math.random() * (max - min + 1)) + min;
-      return n % 2 !== 0 ? n : (n + 1 > max ? n - 1 : n + 1);
-    }
-    function randEven(min, max) {
-      let n = Math.floor(Math.random() * (max - min + 1)) + min;
-      return n % 2 === 0 ? n : (n + 1 > max ? n - 1 : n + 1);
-    }
-
-    function checkAnswer() {
-      if (!current) return;
-      stopTimer();
-      const input = document.getElementById(mode + "Ans");
-      const val = input.value.trim().replace(/ /g, "");
-      let ok = false, correctStr = "", logText = "";
-
-      if (current.type === "mul") {
-        const ans = Number(val.replace(/,/g, ""));
-        const correct = current.a * current.b;
-        ok = (ans === correct);
-        correctStr = correct.toLocaleString();
-        logText = `[M] ${current.a}×${current.b}=${ans}`;
-      } 
-      else if (current.type === "exp") {
-        const ans = Number(val.replace(/,/g, ""));
-        const correct = Math.pow(current.base, current.n);
-        ok = (ans === correct);
-        correctStr = correct.toLocaleString();
-        logText = `[E] ${current.base}^${current.n}=${ans}`;
-      } 
-      else if (current.type === "geo") {
-        const parts = val.split(",").map(Number);
-        ok = (parts[0] === current.b && parts[1] === current.c);
-        correctStr = `${current.b}, ${current.c}`;
-        logText = `[G] a=${current.a}→${val}`;
-      }
-
-      const resEl = document.getElementById(mode + "Result");
-      resEl.textContent = `Ans: ${correctStr} ${ok ? '· OK' : '· WRONG'}`;
-      resEl.className = "result " + (ok ? "correct" : "wrong");
-      saveAndRender(logText, ok);
-    }
 
     ["mul", "exp", "geo"].forEach(p => {
-      document.getElementById(p + "Ans").onkeydown = (e) => { if (e.key === "Enter") checkAnswer(); };
-      document.getElementById(p + "Ans").oninput = (e) => {
-        if (e.target.value.endsWith("  ")) { e.target.value = e.target.value.trim(); triggerNewProblem(); }
-      };
+      const input = document.getElementById(p + "Ans");
+      input.onkeydown = (e) => { if(e.key==='Enter') { if(state.active) checkAnswer(); else startProblem(); }};
+      input.oninput = (e) => { if(e.target.value.endsWith("  ")) { e.target.value = e.target.value.trim(); startProblem(); } };
     });
+
+    function logHistory(text, ok) {
+      const div = document.createElement("div");
+      div.style.color = ok ? "#39d353" : "#f85149";
+      div.style.borderLeft = `3px solid ${ok ? '#39d353' : '#f85149'}`;
+      div.style.paddingLeft = "5px";
+      div.textContent = text;
+      document.getElementById("historyBox").prepend(div);
+      state.recent.push({ok});
+      if(state.recent.length > 30) state.recent.shift();
+      updateGraph();
+    }
+
+    function updateGraph() {
+      const bars = document.getElementById("graphBars");
+      bars.innerHTML = "";
+      state.recent.forEach(item => {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.background = item.ok ? "#39d353" : "#f85149";
+        bars.appendChild(bar);
+      });
+    }
 
     document.onkeydown = (e) => {
       if ((e.code === "Space") && document.activeElement.tagName !== 'INPUT') {
-        e.preventDefault(); triggerNewProblem();
+        e.preventDefault(); startProblem();
       }
     };
   </script>
